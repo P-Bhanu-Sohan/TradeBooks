@@ -1,4 +1,5 @@
-# Assuming this is the content of your existing data_producer.py
+# File: Data/data_producer.py
+
 import yfinance as yf
 from confluent_kafka import Producer
 import json
@@ -28,10 +29,11 @@ def delivery_report(err, msg):
     Callback function for Kafka message delivery reports.
     """
     if err is not None:
-        logger.error(f"Delivery failed for record {msg.key().decode('utf-8')}: {err}")
+        logger.error(f"Delivery failed for record {msg.key().decode('utf-8') if msg.key() else 'N/A'}: {err}")
     else:
-        # logger.debug(f"Produced to {msg.topic()} [{msg.partition()}] @ offset {msg.offset()}")
-        pass # Suppress frequent print for interval streaming
+        # This can be noisy, uncomment for detailed debugging of message delivery
+        # logger.debug(f"Produced to {msg.topic()} [{msg.partition()}] @ offset {msg.offset()} (key: {msg.key().decode('utf-8') if msg.key() else 'N/A'})")
+        pass 
 
 producer_conf = {
     'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
@@ -40,7 +42,12 @@ producer_conf = {
     'linger.ms': 0, # Send immediately for 1-second interval, no batching needed
     'batch.size': 1 # Send individual messages immediately, as we're delaying per message
 }
-producer = Producer(producer_conf)
+try:
+    producer = Producer(producer_conf, on_delivery=delivery_report)
+except Exception as e:
+    logger.critical(f"Failed to initialize Kafka Producer: {e}", exc_info=True)
+    sys.exit(1)
+
 
 # --- Functions ---
 
@@ -57,7 +64,9 @@ def get_last_trading_day_data_for_symbols(symbols, interval='1m'):
     """
     logger.info(f"[{get_current_ist_time()}] Determining last trading day for {', '.join(symbols)}...")
 
-    period_to_check = "7d" # yfinance 1m interval only allows for last 7 days of data
+    # yfinance 1m interval only allows for last 7 days of data, anything <1d is max 60 days
+    # We use "7d" period to ensure we capture at least one full trading day
+    period_to_check = "7d" 
     today_ist = get_current_ist_time()
     today_date_ist = today_ist.date()
 
@@ -65,13 +74,15 @@ def get_last_trading_day_data_for_symbols(symbols, interval='1m'):
 
     try:
         # Download data for all symbols at once.
+        # group_by='ticker' will give a MultiIndex where the first level is the ticker symbol
         data = yf.download(
             tickers=symbols,
             period=period_to_check,
             interval=interval,
-            prepost=False,
-            actions=False,
-            group_by='ticker' # This is crucial for multi-symbol download structure
+            prepost=False, # Do not get pre/post market data
+            actions=False,  # Do not get dividend/split actions
+            group_by='ticker', # This is crucial for multi-symbol download structure
+            progress=False # Suppress progress bar for cleaner logs
         )
 
         if data.empty:
@@ -80,32 +91,41 @@ def get_last_trading_day_data_for_symbols(symbols, interval='1m'):
 
         for symbol in symbols:
             # Extract data for the current symbol.
-            # Need to handle cases where a symbol might not have data if group_by='ticker' isn't perfect
+            # Check if the symbol exists in the MultiIndex columns
             if isinstance(data.columns, pd.MultiIndex):
                 if symbol not in data.columns.levels[0]:
                     logger.warning(f"No data found for {symbol} in the downloaded MultiIndex DataFrame. Skipping.")
                     continue
                 symbol_data = data[symbol]
-            else: # Single symbol download returns non-MultiIndex
+            else: 
+                # This case handles if only one symbol was requested and yfinance returns a single-index DataFrame
+                # However, since `symbols` is always a list, `data` will likely be MultiIndex.
+                # This is a fallback for robustness.
                 symbol_data = data
 
             # Convert index to timezone-aware datetime objects and then to IST for filtering
+            # yfinance typically returns data in the exchange's local time (e.g., US/Eastern for AAPL)
+            # It's safest to localize to the known exchange timezone first, then convert to IST.
             if symbol_data.index.tz is None:
+                # Assuming US/Eastern for US stocks, adjust if tracking other exchanges
                 symbol_data.index = symbol_data.index.tz_localize('America/New_York', ambiguous='infer', nonexistent='shift_forward')
-            symbol_data.index = symbol_data.index.tz_convert('Asia/Kolkata')
+            symbol_data.index = symbol_data.index.tz_convert('Asia/Kolkata') # Convert to IST for filtering "yesterday" from our perspective
 
             # Get unique dates present in the data, sorted descending (most recent first)
             available_dates_ist = sorted(symbol_data.index.normalize().unique(), reverse=True)
 
             last_trading_day_data = pd.DataFrame()
+            # Iterate through available dates to find the first *complete* trading day prior to today
             for market_day_ist in available_dates_ist:
                 if market_day_ist.date() == today_date_ist:
+                    # Skip today's data as we want "yesterday's" complete data
                     continue
                 
+                # Filter data for this specific market day
                 last_trading_day_data = symbol_data[symbol_data.index.normalize() == market_day_ist]
                 if not last_trading_day_data.empty:
                     logger.info(f"[{get_current_ist_time()}] Identified last complete trading day as {market_day_ist.strftime('%Y-%m-%d IST')} for {symbol}.")
-                    break
+                    break # Found the last complete trading day, exit loop
             
             if last_trading_day_data.empty:
                 logger.warning(f"[{get_current_ist_time()}] Could not find a complete last trading day in the downloaded data for {symbol}. Skipping.")
@@ -139,28 +159,35 @@ def stream_historical_data_in_intervals(symbol, producer, topic, data_to_stream,
             'high': row['High'],
             'low': row['Low'],
             'close': row['Close'],
-            'volume': int(row['Volume'])
+            'volume': int(row['Volume']) # Ensure volume is an integer
         }
         payload = json.dumps(record).encode('utf-8')
         
         try:
-            producer.produce(topic, key=symbol.encode('utf-8'), value=payload, callback=delivery_report)
-            producer.poll(0) # Process delivery reports immediately
+            # Produce the message to Kafka. The delivery_report callback will handle success/failure.
+            producer.produce(topic, key=symbol.encode('utf-8'), value=payload)
+            # Poll the producer to allow delivery reports to be processed and internal queues to be managed.
+            # A timeout of 0ms means it won't block.
+            producer.poll(0) 
             
+            # This print can be very noisy for 1-second intervals and multiple symbols.
+            # Uncomment if you need to see every message being streamed.
             # logger.info(f"[{get_current_ist_time()}] Streamed bar for {symbol}: {index.strftime('%Y-%m-%d %H:%M:%S IST')} - Close: {row['Close']}")
         except Exception as e:
             logger.error(f"[{get_current_ist_time()}] Error producing message for {symbol} to Kafka: {e}", exc_info=True)
 
-        time.sleep(delay_seconds) # Simulate streaming delay
+        # Simulate streaming delay between each bar
+        time.sleep(delay_seconds) 
 
-    producer.flush() # Ensure all remaining messages are sent for this symbol
+    # Ensure all remaining messages in the producer's buffer are sent before the function exits
+    producer.flush() 
     logger.info(f"[{get_current_ist_time()}] Finished streaming historical data for {symbol}.")
 
-# --- Main Orchestration Logic ---
+# --- Main Orchestration Logic for Data Producer ---
 if __name__ == '__main__':
     logger.info(f"[{get_current_ist_time()}] Starting daily delayed data feeder for symbols: {', '.join(STOCK_SYMBOLS)}...")
 
-    # Step 1: Download yesterday's data for all symbols
+    # Step 1: Download yesterday's data for all symbols in one call
     all_yesterdays_data = get_last_trading_day_data_for_symbols(STOCK_SYMBOLS, interval='1m')
 
     streaming_threads = []
@@ -170,10 +197,11 @@ if __name__ == '__main__':
         for symbol, data_df in all_yesterdays_data.items():
             if not data_df.empty:
                 logger.info(f"[{get_current_ist_time()}] Creating streaming thread for {symbol}...")
+                # Create a new thread for each symbol's streaming process
                 thread = threading.Thread(
                     target=stream_historical_data_in_intervals,
                     args=(symbol, producer, KAFKA_TOPIC_DAILY_DELAYED_BARS, data_df, STREAM_INTERVAL_SECONDS),
-                    daemon=True # Make thread a daemon so it exits with main process
+                    daemon=True # Make thread a daemon so it exits with the main process
                 )
                 streaming_threads.append(thread)
                 thread.start()
@@ -188,5 +216,7 @@ if __name__ == '__main__':
     else:
         logger.warning(f"[{get_current_ist_time()}] No historical data could be retrieved for any of the specified symbols. Exiting.")
 
+    # Final flush for the main producer to ensure all messages are delivered
     producer.flush()
     logger.info(f"[{get_current_ist_time()}] Daily delayed data feeder has completed its overall task.")
+

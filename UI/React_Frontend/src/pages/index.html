@@ -389,7 +389,7 @@
         let positionsData = []; // This will store the fetched profit book data
         let isRefreshing = false;
 
-        // Initialize timestamp display (remains the same)
+        // Initialize timestamp display
         function updateTimestamp() {
             const now = new Date();
             // Displaying IST as per your project's location (Hyderabad)
@@ -419,33 +419,26 @@
 
         // Calculate P&L for each trade and add to the trade object
         function calculateTradePnl(trade) {
-            // Your strategy signals a BUY. The execution engine records the filled_price.
-            // For a simple demo, let's assume a fixed percentage profit/loss on each trade.
-            // In a real system, P&L would be calculated based on market price vs. filled price for open positions
-            // or (sell_price - buy_price) * qty for closed positions.
-            
-            // For this simulation, let's assume a 0.5% profit on BUYs and 0.5% loss on SELLs, or vice versa,
-            // as you are always buying. So it's a fixed P&L.
-            // The original C++ execution engine always does BUY. Let's make P&L calculation reflect that.
-            // For a BUY, P&L is (Current Market Price - Filled Price) * Qty.
-            // Since we don't have current market price, we'll simulate a P&L.
-            
-            // Assuming your strategy always signals "BUY", a P&L is determined by future price movement.
-            // Let's mock it such that a BUY results in a small profit or loss based on some random factor or fixed percentage.
-            // The C++ logic always signals BUY.
-            // The `notional` field is already calculated by the backend.
-            
-            // Let's simplify: for every BUY, assume a flat 0.25% profit relative to notional.
-            // If the strategy was more complex (BUY/SELL), P&L would be positive for profitable SELLs and profitable BUYs.
-            
             const notional = trade.notional; // `notional` is already calculated by backend and parsed as float
             let pnl = 0;
-            if (trade.action === 'BUY') {
-                // Assuming a simulated small positive P&L for BUYs for visualization
-                pnl = notional * 0.0025; // 0.25% profit
-            } else {
-                 // If you ever add SELL signals, you'd define P&L logic for them
-                 pnl = notional * -0.001; // Small loss for other actions (e.g., if you had SELLs)
+
+            // For a simulated P&L for a crossover strategy:
+            // Assume a small profit/loss based on the action.
+            // In a real system, P&L is calculated based on entry/exit prices of *closed* positions.
+            // Since we're just logging individual trades, this is a simplified simulation.
+
+            switch (trade.action) {
+                case 'BUY':
+                case 'SELL': // This would be a "Sell to Close" a long position
+                case 'SELL_SHORT': // Opening a new short position
+                case 'BUY_TO_COVER': // Closing a short position
+                    // For all trade actions, let's simulate a small profit/loss for visualization.
+                    // This creates more dynamic P&L movements for the charts and table.
+                    // Generate a random P&L between -0.5% and +0.5% of notional
+                    pnl = notional * (Math.random() * 0.01 - 0.005); // Random value between -0.5% and +0.5%
+                    break;
+                default:
+                    pnl = 0; // No P&L for unknown actions
             }
             return pnl;
         }
@@ -485,11 +478,12 @@
             // Calculate a dummy day P&L and its change. In a real system, this would be based on
             // trades executed on the current day.
             const dayPnl = totalPnl * 0.5; // Simulate half of total PnL as day PnL
-            const dayPnlChange = dayPnl > 0 ? '+1.45%' : '-1.45%'; // Dummy change %
+            // Dummy change % based on dayPnl sign
+            const dayPnlChangePercentage = dayPnl >= 0 ? '+1.45%' : '-1.45%'; 
             
-            // For P&L change % (daily/total), you need a reference point (e.g., yesterday's close, previous balance).
-            // Since we don't have that, these are illustrative.
-            const pnlChangePercentage = totalPnl >= 0 ? '+2.34%' : '-1.23%'; // Dummy values
+            // For Total P&L change % (daily/total), you need a reference point (e.g., yesterday's close, previous balance).
+            // Since we don't have that, these are illustrative/dummy.
+            const totalPnlChangePercentage = totalPnl >= 0 ? '+2.34%' : '-1.23%'; 
             
             document.getElementById('totalPnl').textContent = `$${totalPnl.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('dayPnl').textContent = `$${dayPnl.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
@@ -498,11 +492,11 @@
             
             // Update change indicators and apply color based on value
             const pnlChangeElement = document.getElementById('pnlChange');
-            pnlChangeElement.textContent = pnlChangePercentage;
+            pnlChangeElement.textContent = totalPnlChangePercentage;
             pnlChangeElement.className = `metric-change ${totalPnl >= 0 ? 'positive' : 'negative'}`;
 
             const dayPnlChangeElement = document.getElementById('dayPnlChange');
-            dayPnlChangeElement.textContent = dayPnlChange;
+            dayPnlChangeElement.textContent = dayPnlChangePercentage;
             dayPnlChangeElement.className = `metric-change ${dayPnl >= 0 ? 'positive' : 'negative'}`;
 
             document.getElementById('volumeChange').textContent = `${totalTrades} trades`;
@@ -535,7 +529,7 @@
             });
         }
 
-        // Initialize charts (no changes needed)
+        // Initialize charts
         function initializeCharts() {
             const chartOptions = {
                 responsive: true,
@@ -616,7 +610,7 @@
             // Assuming your backend sends timestamps, if not, you might need to add them or use index as proxy
             data.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-            // Prepare data for P&L Chart
+            // Prepare data for Cumulative P&L Chart
             const pnlLabels = data.map(trade => new Date(trade.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
             let cumulativePnl = 0;
             const pnlData = data.map(trade => {
@@ -629,8 +623,7 @@
             pnlChart.data.datasets[0].data = pnlData;
             pnlChart.update();
             
-            // Prepare data for Volume Chart (e.g., volume per trade or aggregated by symbol)
-            // For simplicity, let's plot volume per trade ordered chronologically
+            // Prepare data for Volume Distribution Chart (e.g., volume per trade ordered chronologically)
             const volumeLabels = data.map((trade, i) => `${trade.symbol} ${new Date(trade.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`);
             const volumeData = data.map(trade => trade.qty);
             

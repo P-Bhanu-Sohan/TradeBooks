@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.java": "java",
+        "fstream": "cpp",
+        "locale": "cpp"
+    }
+}

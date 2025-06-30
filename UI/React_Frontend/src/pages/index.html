@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shikshak Securities - Trading Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.4;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-bottom: 1px solid #333;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: 300;
+            color: #ffffff;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #00ff00;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #333, #555);
+            border: 1px solid #666;
+            color: #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #444, #666);
+            border-color: #777;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-areas: 
+                "metrics metrics"
+                "positions charts";
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 80px);
+        }
+
+        .metrics-panel {
+            grid-area: metrics;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .metric-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .positive { color: #00ff88; }
+        .negative { color: #ff4444; }
+
+        .positions-panel {
+            grid-area: positions;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #2d2d2d;
+            padding: 16px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .table-container {
+            height: 300px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #2d2d2d;
+            color: #ccc;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+        }
+
+        tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .buy-action { color: #00ff88; }
+        .sell-action { color: #ff4444; }
+
+        .charts-panel {
+            grid-area: charts;
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chart-header {
+            background: #2d2d2d;
+            padding: 12px 16px;
+            border-bottom: 1px solid #333;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .chart-content {
+            padding: 16px;
+            height: 200px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="logo-section">
+            <div class="logo">S</div>
+            <div class="company-name">Shikshak Securities</div>
+        </div>
+        <div class="header-controls">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>LIVE</span>
+            </div>
+            <div class="timestamp" id="timestamp"></div>
+            <button class="btn" id="refreshBtn">Refresh Data</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="metrics-panel">
+            <div class="metric-card">
+                <div class="metric-label">Total P&L</div>
+                <div class="metric-value" id="totalPnl">$0.00</div>
+                <div class="metric-change positive" id="pnlChange">+0.00%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Day P&L</div>
+                <div class="metric-value" id="dayPnl">$0.00</div>
+                <div class="metric-change positive" id="dayPnlChange">+0.00%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Volume</div>
+                <div class="metric-value" id="totalVolume">0</div>
+                <div class="metric-change" id="volumeChange">0 trades</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Win Rate</div>
+                <div class="metric-value" id="winRate">0%</div>
+                <div class="metric-change" id="winRateChange">0/0 trades</div>
+            </div>
+        </div>
+
+        <div class="positions-panel">
+            <div class="panel-header">
+                <div class="panel-title">Live Positions</div>
+                <div class="timestamp" id="positionsTimestamp"></div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Side</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Notional</th>
+                            <th>P&L</th>
+                        </tr>
+                    </thead>
+                    <tbody id="positionsTableBody">
+                        <tr>
+                            <td colspan="6" class="loading">Loading positions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="charts-panel">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Cumulative P&L</div>
+                </div>
+                <div class="chart-content">
+                    <canvas id="pnlChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Volume Distribution</div>
+                </div>
+                <div class="chart-content">
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Global variables
+        let pnlChart, volumeChart;
+        let positionsData = [];
+        let isRefreshing = false;
+
+        // Initialize timestamp display
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                timeZone: 'America/New_York'
+            }) + ' EST';
+            document.getElementById('timestamp').textContent = timestamp;
+            document.getElementById('positionsTimestamp').textContent = `Last updated: ${timestamp}`;
+        }
+
+        // Generate mock trading data
+        function generateMockData() {
+            const symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'NVDA', 'META', 'NFLX'];
+            const data = [];
+            
+            for (let i = 0; i < 15; i++) {
+                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const action = Math.random() > 0.5 ? 'BUY' : 'SELL';
+                const price = 100 + Math.random() * 200;
+                const qty = Math.floor(Math.random() * 500) + 100;
+                
+                data.push({
+                    symbol,
+                    action,
+                    filled_price: price.toFixed(2),
+                    qty,
+                    timestamp: new Date(Date.now() - Math.random() * 3600000).toISOString()
+                });
+            }
+            
+            return data;
+        }
+
+        // Update metrics display
+        function updateMetrics(data) {
+            let totalPnl = 0;
+            let totalVolume = 0;
+            let winningTrades = 0;
+            
+            data.forEach(trade => {
+                const notional = trade.qty * parseFloat(trade.filled_price);
+                const pnl = (trade.action === 'SELL' ? 1 : -1) * notional * 0.01; // Mock 1% profit/loss
+                totalPnl += pnl;
+                totalVolume += trade.qty;
+                if (pnl > 0) winningTrades++;
+            });
+            
+            const winRate = data.length > 0 ? (winningTrades / data.length * 100).toFixed(1) : 0;
+            
+            document.getElementById('totalPnl').textContent = `$${totalPnl.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('dayPnl').textContent = `$${(totalPnl * 0.3).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('totalVolume').textContent = totalVolume.toLocaleString();
+            document.getElementById('winRate').textContent = `${winRate}%`;
+            
+            // Update change indicators
+            document.getElementById('pnlChange').textContent = totalPnl >= 0 ? '+2.34%' : '-1.23%';
+            document.getElementById('dayPnlChange').textContent = '+1.45%';
+            document.getElementById('volumeChange').textContent = `${data.length} trades`;
+            document.getElementById('winRateChange').textContent = `${winningTrades}/${data.length} trades`;
+        }
+
+        // Render positions table
+        function renderPositionsTable(data) {
+            const tbody = document.getElementById('positionsTableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(trade => {
+                const row = document.createElement('tr');
+                const notional = (trade.qty * parseFloat(trade.filled_price)).toLocaleString(undefined, {minimumFractionDigits: 2});
+                const pnl = ((trade.action === 'SELL' ? 1 : -1) * trade.qty * parseFloat(trade.filled_price) * 0.01).toFixed(2);
+                
+                row.innerHTML = `
+                    <td>${trade.symbol}</td>
+                    <td><span class="${trade.action.toLowerCase()}-action">${trade.action}</span></td>
+                    <td>$${parseFloat(trade.filled_price).toFixed(2)}</td>
+                    <td>${trade.qty.toLocaleString()}</td>
+                    <td>$${notional}</td>
+                    <td class="${parseFloat(pnl) >= 0 ? 'positive' : 'negative'}">$${pnl}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: '#333'
+                        },
+                        ticks: {
+                            color: '#999'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#333'
+                        },
+                        ticks: {
+                            color: '#999'
+                        }
+                    }
+                }
+            };
+
+            // P&L Chart
+            pnlChart = new Chart(document.getElementById('pnlChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Volume Chart
+            volumeChart = new Chart(document.getElementById('volumeChart'), {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: 'rgba(0, 212, 255, 0.6)',
+                        borderColor: '#00d4ff',
+                        borderWidth: 1
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        // Update charts with new data
+        function updateCharts(data) {
+            const labels = data.map((_, i) => `T${i + 1}`);
+            let cumulativePnl = 0;
+            const pnlData = data.map(trade => {
+                const tradePnl = (trade.action === 'SELL' ? 1 : -1) * trade.qty * parseFloat(trade.filled_price) * 0.01;
+                cumulativePnl += tradePnl;
+                return cumulativePnl;
+            });
+            
+            const volumeData = data.map(trade => trade.qty);
+            
+            pnlChart.data.labels = labels;
+            pnlChart.data.datasets[0].data = pnlData;
+            pnlChart.update();
+            
+            volumeChart.data.labels = labels;
+            volumeChart.data.datasets[0].data = volumeData;
+            volumeChart.update();
+        }
+
+        // Refresh data
+        async function refreshData() {
+            if (isRefreshing) return;
+            
+            isRefreshing = true;
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = 'Refreshing...';
+            
+            try {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Generate new mock data
+                positionsData = generateMockData();
+                
+                // Update all components
+                updateMetrics(positionsData);
+                renderPositionsTable(positionsData);
+                updateCharts(positionsData);
+                updateTimestamp();
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            } finally {
+                isRefreshing = false;
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = 'Refresh Data';
+            }
+        }
+
+        // Initialize application
+        function initialize() {
+            updateTimestamp();
+            initializeCharts();
+            refreshData();
+            
+            // Set up event listeners
+            document.getElementById('refreshBtn').addEventListener('click', refreshData);
+            
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                updateTimestamp();
+                if (!isRefreshing) {
+                    refreshData();
+                }
+            }, 30000);
+            
+            // Update timestamp every second
+            setInterval(updateTimestamp, 1000);
+        }
+
+        // Start the application
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>

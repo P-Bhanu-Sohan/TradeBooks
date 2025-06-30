@@ -2,6 +2,26 @@
     "files.associations": {
         "*.java": "java",
         "fstream": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "__verbose_abort": "cpp",
+        "cmath": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "execution": "cpp",
+        "initializer_list": "cpp",
+        "iosfwd": "cpp",
+        "limits": "cpp",
+        "new": "cpp",
+        "stdexcept": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "typeinfo": "cpp",
+        "variant": "cpp",
+        "memory": "cpp",
+        "algorithm": "cpp"
     }
 }

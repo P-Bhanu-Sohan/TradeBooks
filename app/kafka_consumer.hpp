@@ -14,3 +14,5 @@ public:
 protected:
     std::unique_ptr<RdKafka::KafkaConsumer> consumer;
 };
+
+

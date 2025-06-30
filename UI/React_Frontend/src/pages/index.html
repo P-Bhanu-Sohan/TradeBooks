@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shikshak Securities - Trading Dashboard</title>
     <style>
+        /* Your existing CSS (no changes needed) */
         * {
             margin: 0;
             padding: 0;
@@ -380,96 +381,161 @@
     </main>
 
     <script>
+        // --- Configuration ---
+        const API_BASE_URL = 'http://localhost:8000'; // Your FastAPI backend URL
+
         // Global variables
         let pnlChart, volumeChart;
-        let positionsData = [];
+        let positionsData = []; // This will store the fetched profit book data
         let isRefreshing = false;
 
-        // Initialize timestamp display
+        // Initialize timestamp display (remains the same)
         function updateTimestamp() {
             const now = new Date();
-            const timestamp = now.toLocaleTimeString('en-US', { 
-                hour12: false, 
-                timeZone: 'America/New_York'
-            }) + ' EST';
+            // Displaying IST as per your project's location (Hyderabad)
+            const timestamp = now.toLocaleTimeString('en-IN', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+                timeZone: 'Asia/Kolkata'
+            }) + ' IST';
             document.getElementById('timestamp').textContent = timestamp;
             document.getElementById('positionsTimestamp').textContent = `Last updated: ${timestamp}`;
         }
 
-        // Generate mock trading data
-        function generateMockData() {
-            const symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'NVDA', 'META', 'NFLX'];
-            const data = [];
-            
-            for (let i = 0; i < 15; i++) {
-                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
-                const action = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                const price = 100 + Math.random() * 200;
-                const qty = Math.floor(Math.random() * 500) + 100;
-                
-                data.push({
-                    symbol,
-                    action,
-                    filled_price: price.toFixed(2),
-                    qty,
-                    timestamp: new Date(Date.now() - Math.random() * 3600000).toISOString()
-                });
+        // --- Core Data Fetching Function ---
+        async function fetchProfitBookData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profit-book`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching profit book data:', error);
+                // Return empty array on error to prevent crashing and clear UI
+                return []; 
             }
-            
-            return data;
         }
+
+        // Calculate P&L for each trade and add to the trade object
+        function calculateTradePnl(trade) {
+            // Your strategy signals a BUY. The execution engine records the filled_price.
+            // For a simple demo, let's assume a fixed percentage profit/loss on each trade.
+            // In a real system, P&L would be calculated based on market price vs. filled price for open positions
+            // or (sell_price - buy_price) * qty for closed positions.
+            
+            // For this simulation, let's assume a 0.5% profit on BUYs and 0.5% loss on SELLs, or vice versa,
+            // as you are always buying. So it's a fixed P&L.
+            // The original C++ execution engine always does BUY. Let's make P&L calculation reflect that.
+            // For a BUY, P&L is (Current Market Price - Filled Price) * Qty.
+            // Since we don't have current market price, we'll simulate a P&L.
+            
+            // Assuming your strategy always signals "BUY", a P&L is determined by future price movement.
+            // Let's mock it such that a BUY results in a small profit or loss based on some random factor or fixed percentage.
+            // The C++ logic always signals BUY.
+            // The `notional` field is already calculated by the backend.
+            
+            // Let's simplify: for every BUY, assume a flat 0.25% profit relative to notional.
+            // If the strategy was more complex (BUY/SELL), P&L would be positive for profitable SELLs and profitable BUYs.
+            
+            const notional = trade.notional; // `notional` is already calculated by backend and parsed as float
+            let pnl = 0;
+            if (trade.action === 'BUY') {
+                // Assuming a simulated small positive P&L for BUYs for visualization
+                pnl = notional * 0.0025; // 0.25% profit
+            } else {
+                 // If you ever add SELL signals, you'd define P&L logic for them
+                 pnl = notional * -0.001; // Small loss for other actions (e.g., if you had SELLs)
+            }
+            return pnl;
+        }
+
 
         // Update metrics display
         function updateMetrics(data) {
             let totalPnl = 0;
             let totalVolume = 0;
             let winningTrades = 0;
+            let totalTrades = data.length;
+
+            if (totalTrades === 0) {
+                 // Reset all metrics if no data
+                document.getElementById('totalPnl').textContent = `$0.00`;
+                document.getElementById('dayPnl').textContent = `$0.00`;
+                document.getElementById('totalVolume').textContent = `0`;
+                document.getElementById('winRate').textContent = `0%`;
+                document.getElementById('pnlChange').textContent = `+0.00%`;
+                document.getElementById('pnlChange').className = 'metric-change positive'; // Default to positive
+                document.getElementById('dayPnlChange').textContent = `+0.00%`;
+                document.getElementById('dayPnlChange').className = 'metric-change positive';
+                document.getElementById('volumeChange').textContent = `0 trades`;
+                document.getElementById('winRateChange').textContent = `0/0 trades`;
+                return;
+            }
             
             data.forEach(trade => {
-                const notional = trade.qty * parseFloat(trade.filled_price);
-                const pnl = (trade.action === 'SELL' ? 1 : -1) * notional * 0.01; // Mock 1% profit/loss
-                totalPnl += pnl;
-                totalVolume += trade.qty;
-                if (pnl > 0) winningTrades++;
+                const tradePnl = calculateTradePnl(trade);
+                totalPnl += tradePnl;
+                totalVolume += trade.qty; // `qty` is already parsed as int by backend
+                if (tradePnl > 0) winningTrades++;
             });
             
-            const winRate = data.length > 0 ? (winningTrades / data.length * 100).toFixed(1) : 0;
+            const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100).toFixed(1) : 0;
+            
+            // Calculate a dummy day P&L and its change. In a real system, this would be based on
+            // trades executed on the current day.
+            const dayPnl = totalPnl * 0.5; // Simulate half of total PnL as day PnL
+            const dayPnlChange = dayPnl > 0 ? '+1.45%' : '-1.45%'; // Dummy change %
+            
+            // For P&L change % (daily/total), you need a reference point (e.g., yesterday's close, previous balance).
+            // Since we don't have that, these are illustrative.
+            const pnlChangePercentage = totalPnl >= 0 ? '+2.34%' : '-1.23%'; // Dummy values
             
             document.getElementById('totalPnl').textContent = `$${totalPnl.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('dayPnl').textContent = `$${(totalPnl * 0.3).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('dayPnl').textContent = `$${dayPnl.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('totalVolume').textContent = totalVolume.toLocaleString();
             document.getElementById('winRate').textContent = `${winRate}%`;
             
-            // Update change indicators
-            document.getElementById('pnlChange').textContent = totalPnl >= 0 ? '+2.34%' : '-1.23%';
-            document.getElementById('dayPnlChange').textContent = '+1.45%';
-            document.getElementById('volumeChange').textContent = `${data.length} trades`;
-            document.getElementById('winRateChange').textContent = `${winningTrades}/${data.length} trades`;
+            // Update change indicators and apply color based on value
+            const pnlChangeElement = document.getElementById('pnlChange');
+            pnlChangeElement.textContent = pnlChangePercentage;
+            pnlChangeElement.className = `metric-change ${totalPnl >= 0 ? 'positive' : 'negative'}`;
+
+            const dayPnlChangeElement = document.getElementById('dayPnlChange');
+            dayPnlChangeElement.textContent = dayPnlChange;
+            dayPnlChangeElement.className = `metric-change ${dayPnl >= 0 ? 'positive' : 'negative'}`;
+
+            document.getElementById('volumeChange').textContent = `${totalTrades} trades`;
+            document.getElementById('winRateChange').textContent = `${winningTrades}/${totalTrades} trades`;
         }
 
         // Render positions table
         function renderPositionsTable(data) {
             const tbody = document.getElementById('positionsTableBody');
-            tbody.innerHTML = '';
+            tbody.innerHTML = ''; // Clear existing rows
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="loading">No positions to display.</td></tr>`;
+                return;
+            }
             
             data.forEach(trade => {
                 const row = document.createElement('tr');
-                const notional = (trade.qty * parseFloat(trade.filled_price)).toLocaleString(undefined, {minimumFractionDigits: 2});
-                const pnl = ((trade.action === 'SELL' ? 1 : -1) * trade.qty * parseFloat(trade.filled_price) * 0.01).toFixed(2);
+                const pnl = calculateTradePnl(trade);
                 
                 row.innerHTML = `
                     <td>${trade.symbol}</td>
                     <td><span class="${trade.action.toLowerCase()}-action">${trade.action}</span></td>
-                    <td>$${parseFloat(trade.filled_price).toFixed(2)}</td>
+                    <td>$${trade.filled_price.toFixed(2)}</td>
                     <td>${trade.qty.toLocaleString()}</td>
-                    <td>$${notional}</td>
-                    <td class="${parseFloat(pnl) >= 0 ? 'positive' : 'negative'}">$${pnl}</td>
+                    <td>$${trade.notional.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="${pnl >= 0 ? 'positive' : 'negative'}">$${pnl.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
             });
         }
 
-        // Initialize charts
+        // Initialize charts (no changes needed)
         function initializeCharts() {
             const chartOptions = {
                 responsive: true,
@@ -534,26 +600,46 @@
 
         // Update charts with new data
         function updateCharts(data) {
-            const labels = data.map((_, i) => `T${i + 1}`);
+            if (data.length === 0) {
+                // Clear charts if no data
+                pnlChart.data.labels = [];
+                pnlChart.data.datasets[0].data = [];
+                pnlChart.update();
+
+                volumeChart.data.labels = [];
+                volumeChart.data.datasets[0].data = [];
+                volumeChart.update();
+                return;
+            }
+
+            // Sort data by timestamp for correct cumulative P&L and chronological display
+            // Assuming your backend sends timestamps, if not, you might need to add them or use index as proxy
+            data.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+            // Prepare data for P&L Chart
+            const pnlLabels = data.map(trade => new Date(trade.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
             let cumulativePnl = 0;
             const pnlData = data.map(trade => {
-                const tradePnl = (trade.action === 'SELL' ? 1 : -1) * trade.qty * parseFloat(trade.filled_price) * 0.01;
+                const tradePnl = calculateTradePnl(trade);
                 cumulativePnl += tradePnl;
                 return cumulativePnl;
             });
             
-            const volumeData = data.map(trade => trade.qty);
-            
-            pnlChart.data.labels = labels;
+            pnlChart.data.labels = pnlLabels;
             pnlChart.data.datasets[0].data = pnlData;
             pnlChart.update();
             
-            volumeChart.data.labels = labels;
+            // Prepare data for Volume Chart (e.g., volume per trade or aggregated by symbol)
+            // For simplicity, let's plot volume per trade ordered chronologically
+            const volumeLabels = data.map((trade, i) => `${trade.symbol} ${new Date(trade.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`);
+            const volumeData = data.map(trade => trade.qty);
+            
+            volumeChart.data.labels = volumeLabels;
             volumeChart.data.datasets[0].data = volumeData;
             volumeChart.update();
         }
 
-        // Refresh data
+        // Refresh data (main function to call backend)
         async function refreshData() {
             if (isRefreshing) return;
             
@@ -563,20 +649,17 @@
             refreshBtn.textContent = 'Refreshing...';
             
             try {
-                // Simulate API call delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Fetch data from your FastAPI backend
+                positionsData = await fetchProfitBookData();
                 
-                // Generate new mock data
-                positionsData = generateMockData();
-                
-                // Update all components
+                // Update all components with actual data
                 updateMetrics(positionsData);
                 renderPositionsTable(positionsData);
                 updateCharts(positionsData);
                 updateTimestamp();
                 
             } catch (error) {
-                console.error('Error refreshing data:', error);
+                console.error('Error in refreshData:', error);
             } finally {
                 isRefreshing = false;
                 refreshBtn.disabled = false;
@@ -588,24 +671,24 @@
         function initialize() {
             updateTimestamp();
             initializeCharts();
-            refreshData();
+            refreshData(); // Initial data load
             
             // Set up event listeners
             document.getElementById('refreshBtn').addEventListener('click', refreshData);
             
-            // Auto-refresh every 30 seconds
+            // Auto-refresh every 10 seconds (adjust as needed for your data update rate)
             setInterval(() => {
-                updateTimestamp();
+                // Only refresh data if not already refreshing to avoid overlapping requests
                 if (!isRefreshing) {
                     refreshData();
                 }
-            }, 30000);
-            
-            // Update timestamp every second
+            }, 10000); // Fetch data every 10 seconds
+
+            // Update timestamp every second (visual only, independent of data refresh)
             setInterval(updateTimestamp, 1000);
         }
 
-        // Start the application
+        // Start the application when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', initialize);
     </script>
 </body>

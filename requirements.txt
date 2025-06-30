@@ -1,0 +1,4 @@
+confluent-kafka
+yfinance
+fastapi
+uvicorn

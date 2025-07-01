@@ -4,8 +4,6 @@
 ## Overview
 This project simulates a high-frequency trading (HFT) environment using Apache Kafka to stream minute-wise tick data of major tech stocks. The system implements sophisticated HFT-inspired strategies to profit from short-term market inefficiencies and liquidity imbalances.
 
-![System Architecture](https://miro.medium.com/v2/resize:fit:1400/1*Xf0zGc2hF7JhO2tYK5SdOg.png)
-
 ## Key Features
 - **Real-time Data Streaming**: Simulates market data feeds using Kafka
 - **HFT Strategies**: Implements liquidity detection and predictive market-making

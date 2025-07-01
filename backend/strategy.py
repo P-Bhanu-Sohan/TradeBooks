@@ -1,4 +1,4 @@
-# strategy.py - Pass price to execute_order
+ # strategy.py - Pass price to execute_order
 import json
 import os
 import csv

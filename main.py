@@ -22,4 +22,5 @@ def profit_book():
         with open(ORDER_BOOK_PATH) as f:
             return list(csv.DictReader(f))
     except FileNotFoundError:
-        return {"error": "Order book not found"}
+        return {"error": "Order book not found"} 
+#uvicorn main:app --reload --port 8000

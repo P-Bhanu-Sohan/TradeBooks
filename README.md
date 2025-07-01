@@ -1,1 +1,0 @@
-HFT Order Book Simulation; C++ and Kafka for bid ask spread arbitrage

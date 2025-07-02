@@ -32,39 +32,44 @@ datetime,open,high,low,close,% change
 
 ```mermaid
 flowchart TD
+    %% --- Data Ingestion ---
     subgraph Data_Ingestion
-        A1[AAPL.csv] --> P1
-        A2[MSFT.csv] --> P2
-        A3[AMZN.csv] --> P3
-        A4[NVDA.csv] --> P4
-        A5[TSLA.csv] --> P5
-        A6[GOOG.csv] --> P6
+        A1[AAPL.csv] --> PAAPL[Producer AAPL]
+        A2[MSFT.csv] --> PMSFT[Producer MSFT]
+        A3[AMZN.csv] --> PAMZN[Producer AMZN]
+        A4[NVDA.csv] --> PNVDA[Producer NVDA]
+        A5[TSLA.csv] --> PTSLA[Producer TSLA]
+        A6[GOOG.csv] --> PGOOG[Producer GOOG]
     end
 
+    %% --- Kafka Topics ---
     subgraph Kafka
-        P1[Producer AAPL] --> T1[topic_aapl]
-        P2[Producer MSFT] --> T2[topic_msft]
-        P3[Producer AMZN] --> T3[topic_amzn]
-        P4[Producer NVDA] --> T4[topic_nvda]
-        P5[Producer TSLA] --> T5[topic_tsla]
-        P6[Producer GOOG] --> T6[topic_goog]
+        PAAPL --> TAAPL[topic_aapl]
+        PMSFT --> TMSFT[topic_msft]
+        PAMZN --> TAMZN[topic_amzn]
+        PNVDA --> TNVDA[topic_nvda]
+        PTSLA --> TTSLA[topic_tsla]
+        PGOOG --> TGOOG[topic_goog]
     end
 
+    %% --- Strategy Engine ---
     subgraph Strategy_Engine
-        T1 --> C[Kafka Consumer]
-        T2 --> C
-        T3 --> C
-        T4 --> C
-        T5 --> C
-        T6 --> C
-        C --> STRAT[Strategy Engine (LSS)]
-        STRAT --> EXE[Execution System]
+        TAAPL --> Consumer
+        TMSFT --> Consumer
+        TAMZN --> Consumer
+        TNVDA --> Consumer
+        TTSLA --> Consumer
+        TGOOG --> Consumer
+        Consumer --> Strategy[Strategy Engine (LSS)]
+        Strategy --> Execution[Execution System]
     end
 
+    %% --- State Recording ---
     subgraph State_Recording
-        EXE --> OB[Order Book CSV]
-        EXE --> PS[Portfolio State JSON]
+        Execution --> OrderBook[Order Book CSV]
+        Execution --> Portfolio[Portfolio State JSON]
     end
+
 ```
 
 ---

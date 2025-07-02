@@ -3,12 +3,11 @@
 ## 📘 Overview
 
 This simulation replicates a high-frequency trading (HFT) environment using **Apache Kafka** to stream **minute-wise tick data** for major tech stocks. It executes **institutional-style strategies** on historical data using a real-time architecture, producing realistic trade logs and portfolio P\&L updates.
-
 ---
 
 ## 🔑 Key Features
 
-* 📡 **Real-time Market Simulation** via Kafka
+* 📡 **Real-time Market Simulation** Streamed OHLC data in 1 min intervals using Kafka and Zookeeper in order to simulate market conditions.
 * 📈 **Liquidity Surge Scalping Strategy** with EMA & ATR logic
 * 💼 **Multi-Stock Portfolio**: AAPL, MSFT, AMZN, NVDA, TSLA, GOOG
 * 📊 **Live P\&L & Trade Logs**: Recorded in `order_book.csv`
@@ -30,49 +29,99 @@ datetime,open,high,low,close,% change
 
 ### 🔄 End-to-End Flow Diagram
 
+### Frontend
 ```mermaid
-flowchart TD
-    %% --- Data Ingestion ---
-    subgraph Data_Ingestion
-        A1[AAPL.csv] --> PAAPL[Producer AAPL]
-        A2[MSFT.csv] --> PMSFT[Producer MSFT]
-        A3[AMZN.csv] --> PAMZN[Producer AMZN]
-        A4[NVDA.csv] --> PNVDA[Producer NVDA]
-        A5[TSLA.csv] --> PTSLA[Producer TSLA]
-        A6[GOOG.csv] --> PGOOG[Producer GOOG]
+flowchart LR
+    subgraph Frontend["🌐 Frontend (Port 3000)"]
+        HTML["📄 index.html"]
+        JS["💻 script.js"]
     end
+
+    subgraph Backend["🚀 FastAPI Backend (Port 8000)"]
+        FastAPI["⚙️ FastAPI Server"]
+        Route["📡 /api/profit-book"]
+    end
+
+    HTML --> JS
+    JS --> Route
+    Route --> FastAPI
+    FastAPI --> Route
+    Route --> JS
+    JS --> HTML
+```
+### Data Streaming Pipeline
+```mermaid
+flowchart LR
+    %% --- Data Sources ---
+    AAPL["🍏 AAPL.csv"]
+    MSFT["🪟 MSFT.csv"]
+    AMZN["📦 AMZN.csv"]
+    NVDA["🎮 NVDA.csv"]
+    TSLA["🚗 TSLA.csv"]
+    GOOG["🔍 GOOG.csv"]
+
+    %% --- Producer + Kafka Node ---
+    KafkaStream["🛠️ Producer + Kafka Broker"]
 
     %% --- Kafka Topics ---
-    subgraph Kafka
-        PAAPL --> TAAPL[topic_aapl]
-        PMSFT --> TMSFT[topic_msft]
-        PAMZN --> TAMZN[topic_amzn]
-        PNVDA --> TNVDA[topic_nvda]
-        PTSLA --> TTSLA[topic_tsla]
-        PGOOG --> TGOOG[topic_goog]
+    subgraph KafkaTopics["📦 Kafka Topics"]
+        TAAPL["topic_aapl"]
+        TMSFT["topic_msft"]
+        TAMZN["topic_amzn"]
+        TNVDA["topic_nvda"]
+        TTSLA["topic_tsla"]
+        TGOOG["topic_goog"]
     end
 
-    %% --- Strategy Engine ---
-    subgraph Strategy_Engine
-        TAAPL --> Consumer
-        TMSFT --> Consumer
-        TAMZN --> Consumer
-        TNVDA --> Consumer
-        TTSLA --> Consumer
-        TGOOG --> Consumer
-        Consumer --> Strategy[Strategy Engine (LSS)]
-        Strategy --> Execution[Execution System]
-    end
+    %% --- Downstream Processing ---
+    Strategy["🧠 Strategy Engine (LSS)"]
+    Execution["⚙️ Execution System"]
+    OrderBook["📝 Order Book"]
+    Portfolio["💼 Portfolio State"]
 
-    %% --- State Recording ---
-    subgraph State_Recording
-        Execution --> OrderBook[Order Book CSV]
-        Execution --> Portfolio[Portfolio State JSON]
-    end
+    %% --- Connections ---
+    AAPL --> KafkaStream
+    MSFT --> KafkaStream
+    AMZN --> KafkaStream
+    NVDA --> KafkaStream
+    TSLA --> KafkaStream
+    GOOG --> KafkaStream
 
+    KafkaStream --> TAAPL
+    KafkaStream --> TMSFT
+    KafkaStream --> TAMZN
+    KafkaStream --> TNVDA
+    KafkaStream --> TTSLA
+    KafkaStream --> TGOOG
+
+    TAAPL --> Strategy
+    TMSFT --> Strategy
+    TAMZN --> Strategy
+    TNVDA --> Strategy
+    TTSLA --> Strategy
+    TGOOG --> Strategy
+
+    Strategy --> Execution
+    Execution --> OrderBook
+    Execution --> Portfolio
+
+    %% --- Classes ---
+    class AAPL,TAAPL apple;
+    class MSFT,TMSFT msft;
+    class AMZN,TAMZN amzn;
+    class NVDA,TNVDA nvda;
+    class TSLA,TTSLA tsla;
+    class GOOG,TGOOG goog;
+
+    %% --- Class Definitions ---
+    classDef apple fill:#a2d2ff,stroke:#023e8a,color:#000;
+    classDef msft fill:#d0f4de,stroke:#0078d4,color:#000;
+    classDef amzn fill:#ffe066,stroke:#ff9900,color:#000;
+    classDef nvda fill:#d3f9d8,stroke:#76b900,color:#000;
+    classDef tsla fill:#ffadad,stroke:#cc0000,color:#000;
+    classDef goog fill:#e0c3fc,stroke:#4285f4,color:#000;
 ```
 
----
 
 ## 🧠 Trading Strategy: Liquidity Surge Scalping (LSS)
 

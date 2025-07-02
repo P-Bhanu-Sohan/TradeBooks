@@ -1,222 +1,221 @@
-***WORK IN PROGRESS*** 🛠️
-# High-Frequency Trading Simulation with Kafka
+#  TradeBooks: High-Frequency Trading Simulation with Kafka
 
-## Overview
-This project simulates a high-frequency trading (HFT) environment using Apache Kafka to stream minute-wise tick data of major tech stocks. The system implements sophisticated HFT-inspired strategies to profit from short-term market inefficiencies and liquidity imbalances.
+## 📘 Overview
 
-## Key Features
-- **Real-time Data Streaming**: Simulates market data feeds using Kafka
-- **HFT Strategies**: Implements liquidity detection and predictive market-making
-- **Portfolio Management**: Trades across 6 major tech stocks (AAPL, MSFT, AMZN, NVDA, TSLA, GOOG)
-- **Performance Tracking**: Records all trades to an order book with P&L calculation
-- **State Persistence**: Maintains positions and cash balance across sessions
+This simulation replicates a high-frequency trading (HFT) environment using **Apache Kafka** to stream **minute-wise tick data** for major tech stocks. It executes **institutional-style strategies** on historical data using a real-time architecture, producing realistic trade logs and portfolio P\&L updates.
 
-## Data Pipeline Architecture
+---
 
-### 1. Data Sources
-- Historical minute-wise tick data for 15 years
-- Data format: `datetime, open, high, low, close, % change`
-- Stocks covered: AAPL, MSFT, AMZN, NVDA, TSLA, GOOG
+## 🔑 Key Features
 
-### 2. Kafka Infrastructure
-| Component       | Role                                                                 |
-|----------------|----------------------------------------------------------------------|
-| **Producer**   | Streams historical data from CSV files to Kafka topics              |
-| **Topics**     | Dedicated topic per stock (e.g., `topic_aapl`, `topic_msft`)       |
-| **Consumer**   | Processes real-time data and executes trading strategies           |
-| **Zookeeper**  | Manages Kafka broker coordination                                   |
+* 📡 **Real-time Market Simulation** via Kafka
+* 📈 **Liquidity Surge Scalping Strategy** with EMA & ATR logic
+* 💼 **Multi-Stock Portfolio**: AAPL, MSFT, AMZN, NVDA, TSLA, GOOG
+* 📊 **Live P\&L & Trade Logs**: Recorded in `order_book.csv`
+* 💾 **State Persistence**: Tracks cash, holdings, and equity across ticks
+* 🧠 **Modular Components**: Producer, Consumer, Strategy, Execution Engine
 
-### 3. Data Flow
+---
+
+## 🧱 Kafka Data Pipeline Architecture
+
+### 📊 Source Data
+
+* **Tick granularity**: 1-minute OHLC data for each stock
+* **Format**:
+
+```csv
+datetime,open,high,low,close,% change
+```
+
+### 🔄 End-to-End Flow Diagram
+
 ```mermaid
-graph LR
-    A[CSV Files] --> B[Kafka Producer]
-    B --> C[Kafka Topics]
-    C --> D[Strategy Consumer]
-    D --> E[Trading Engine]
-    E --> F[Order Execution]
-    F --> G[Order Book]
-    F --> H[Portfolio State]
+flowchart TD
+    subgraph Data_Ingestion
+        A1[AAPL.csv] --> P1
+        A2[MSFT.csv] --> P2
+        A3[AMZN.csv] --> P3
+        A4[NVDA.csv] --> P4
+        A5[TSLA.csv] --> P5
+        A6[GOOG.csv] --> P6
+    end
+
+    subgraph Kafka
+        P1[Producer AAPL] --> T1[topic_aapl]
+        P2[Producer MSFT] --> T2[topic_msft]
+        P3[Producer AMZN] --> T3[topic_amzn]
+        P4[Producer NVDA] --> T4[topic_nvda]
+        P5[Producer TSLA] --> T5[topic_tsla]
+        P6[Producer GOOG] --> T6[topic_goog]
+    end
+
+    subgraph Strategy_Engine
+        T1 --> C[Kafka Consumer]
+        T2 --> C
+        T3 --> C
+        T4 --> C
+        T5 --> C
+        T6 --> C
+        C --> STRAT[Strategy Engine (LSS)]
+        STRAT --> EXE[Execution System]
+    end
+
+    subgraph State_Recording
+        EXE --> OB[Order Book CSV]
+        EXE --> PS[Portfolio State JSON]
+    end
 ```
 
-### 4. Message Format
-```json
-{
-  "datetime": "2025-03-07 20:54:00",
-  "open": 261.42,
-  "high": 262.68,
-  "low": 261.42,
-  "close": 262.58,
-  "% change": 0.4437
-}
-```
+---
 
-## Trading Strategies
+## 🧠 Trading Strategy: Liquidity Surge Scalping (LSS)
 
-### 1. Liquidity Surge Scalping (LSS) Strategy
-**Core Concept**: Identifies institutional order flow through volume spikes and price rejection patterns
+### 📌 Entry Criteria
 
-#### Entry Signals:
-1. **Volume Surge**: 
-   - Current volume > 3× 20-minute rolling average
-   - Uses absolute % change as volume proxy
-   
-2. **Price Rejection**:
-   - Bullish: `(close - low) / (high - low) > 0.7`
-   - Bearish: `(high - close) / (high - low) > 0.7`
-   
-3. **Trend Confirmation**:
-   - 5-min EMA > 20-min EMA for longs
-   - 5-min EMA < 20-min EMA for shorts
+* 🔺 **Volume Surge**:
+  `abs(% change) > 3 × rolling mean (20 min)`
 
-#### Exit Mechanism:
-- **Take Profit**: 0.5× ATR (14-min) from entry
-- **Stop Loss**: 0.3× ATR from entry
-- **Position Sizing**: 1% of equity per trade
+* 🔻 **Price Rejection Patterns**:
 
-## System Components
+  * Bullish: `(close - low) / (high - low) > 0.7`
+  * Bearish: `(high - close) / (high - low) > 0.7`
 
-### 1. Producer (`producer.py`)
-- Reads historical CSV files
-- Streams data to Kafka topics
-- Configurable speed (real-time or accelerated)
+* ✅ **Trend Confirmation**:
+
+  * Long: `EMA_5 > EMA_20`
+  * Short: `EMA_5 < EMA_20`
+
+### 🧮 Exit Conditions
+
+* 🎯 Take Profit: `+0.5 × ATR_14`
+* 🛑 Stop Loss: `-0.3 × ATR_14`
+* 🧷 Position Sizing: `1% of total equity`
+
+---
+
+## 🧩 System Components
+
+### 1. `producer.py`
+
+Streams CSV data to Kafka topics every few seconds:
 
 ```python
-def stream_data():
-    while True:
-        for stock in stocks:
-            row = get_next_row(stock)
-            producer.send(topic, json.dumps(row))
-        time.sleep(5)  # 5-second intervals for acceleration
+for stock in stocks:
+    row = get_next_row(stock)
+    producer.send(topic, json.dumps(row))
 ```
 
-### 2. Consumer (`consumer.py`)
-- Processes incoming market data
-- Manages strategy execution
-- Handles position tracking
+### 2. `consumer.py`
+
+Consumes messages from Kafka and sends them to the strategy engine:
 
 ```python
-consumer = Consumer({'bootstrap.servers': 'localhost:9092'})
-consumer.subscribe(['topic_aapl', 'topic_msft'])
-
-while True:
-    msg = consumer.poll()
-    handle_tick(msg.topic(), msg.value())
+consumer.subscribe(['topic_aapl', 'topic_msft', ...])
+msg = consumer.poll()
+handle_tick(msg.topic(), msg.value())
 ```
 
-### 3. Trading Engine (`strategy.py`)
-- Implements LSS strategy logic
-- Maintains rolling windows of price data
-- Calculates technical indicators (EMA, ATR)
-- Generates buy/sell signals
+### 3. `strategy.py`
+
+Processes tick data and applies trading logic:
 
 ```python
-def handle_tick(stock, data):
-    # Update indicators
-    update_ema(stock, data['close'])
-    update_atr(stock, data)
-    
-    # Check entry conditions
-    if volume_surge(stock) and price_rejection(stock) and trend_confirmation(stock):
-        execute_order(stock, 'BUY', calculate_size(stock))
+if volume_surge(...) and price_rejection(...) and trend_confirmation(...):
+    execute_order(stock, 'BUY', calculate_size(...))
 ```
 
-### 4. Execution System (`execution.py`)
-- Processes orders
-- Updates portfolio state
-- Records trades to order book
+### 4. `execution.py`
+
+Handles order placement and portfolio updates:
 
 ```python
-def execute_order(stock, action, qty, price):
-    global CASH, POSITIONS
-    
-    if action == 'BUY':
-        CASH -= price * qty
-        POSITIONS[stock] += qty
-    elif action == 'SELL':
-        CASH += price * qty
-        POSITIONS[stock] -= qty
-        
-    record_trade(stock, action, qty, price)
+if action == 'BUY':
+    CASH -= price * qty
+    POSITIONS[stock] += qty
 ```
 
-### 5. Order Book (`orderbook.py`)
-- Maintains complete trade history
-- Tracks portfolio equity over time
-- CSV output format:
+### 5. `orderbook.py`
+
+Appends trade records:
+
+```
+timestamp,symbol,action,qty,price,notional,cash,equity
+```
+
+### 6. `config.py`
+
+Central config for:
+
+* Kafka setup
+* Strategy parameters
+* Risk rules
+
+---
+
+## ⚙️ Setup & Installation
+
+### ✅ Prerequisites
+
+* Python 3.9+
+* Apache Kafka with ZooKeeper
+* Python packages:
+
+  ```bash
+  pip install -r requirements.txt
   ```
-  timestamp,symbol,action,qty,price,notional,cash,equity
-  2025-07-01T22:14:47.265Z,TSLA,BUY,50,262.58,13129.0,86871.0,100000.0
-  ```
 
-### 6. Configuration (`config.py`)
-- Centralized system parameters
-- Portfolio settings
-- Strategy parameters
+### 📡 Kafka Setup
 
-```python
-# Kafka Configuration
-KAFKA_CONFIG = {'bootstrap.servers': 'localhost:9092'}
+```bash
+# Start Zookeeper
+bin/zookeeper-server-start.sh config/zookeeper.properties
 
-# Strategy Parameters
-VOLUME_WINDOW = 20
-VOLUME_MULTIPLIER = 3.0
-RISK_PER_TRADE = 0.01  # 1% of equity
+# Start Kafka
+bin/kafka-server-start.sh config/server.properties
+
+# Create Kafka topics
+bin/kafka-topics.sh --create --topic topic_aapl --bootstrap-server localhost:9092
+# Repeat for all 6 stocks
 ```
 
-## Getting Started
+### 🚀 Running the System
 
-### Prerequisites
-- Python 3.9+
-- Apache Kafka
-- Python packages: `confluent-kafka`, `numpy`
+```bash
+# Stream historical data
+python producer.py
 
-### Installation
-1. **Set up Kafka:**
-   ```bash
-   # Start Zookeeper
-   bin/zookeeper-server-start.sh config/zookeeper.properties
-   
-   # Start Kafka
-   bin/kafka-server-start.sh config/server.properties
-   
-   # Create topics
-   bin/kafka-topics.sh --create --topic topic_aapl --bootstrap-server localhost:9092
-   bin/kafka-topics.sh --create --topic topic_msft --bootstrap-server localhost:9092
-   # Repeat for other stocks
-   ```
+# Start real-time consumer and strategy
+python consumer.py
+```
 
-2. **Install Python dependencies:**
-   ```bash
-   pip install confluent-kafka numpy
-   ```
+---
 
-3. **Prepare data files:**
-   - Place CSV files in `data/` directory
-   - Naming convention: `AAPL.csv`, `MSFT.csv`, etc.
-   - Required columns: `datetime,open,high,low,close,% change`
+## 📈 Output & Monitoring
 
-### Running the Simulation
-1. **Start the producer:**
-   ```bash
-   python producer.py
-   ```
+* ✅ Trade logs: `order_book.csv`
+* ✅ Portfolio snapshot: `trading_state.json`
+* ✅ Live dashboard: Frontend (`index.html`, `script.js`)
 
-2. **Start the consumer:**
-   ```bash
-   python consumer.py
-   ```
+---
 
-3. **Monitor output:**
-   - Real-time logs in console
-   - Trade records in `order_book.csv`
-   - Portfolio state in `trading_state.json`
+## 🛠️ Future Enhancements
 
-## Future Enhancements
-1. **Machine Learning Integration**: Add predictive models for price forecasting
-2. **Multi-asset Correlation**: Implement pairs trading strategies
-3. **Backtesting Framework**: Historical performance analysis
-4. **Visual Dashboard**: Real-time P&L monitoring
-5. **Risk Management System**: Drawdown controls and volatility scaling
+* 🤖 **ML-based Alpha Generation**
+* 📉 **Backtesting Framework**
+* 📊 **Real-time Dashboard (Chart.js Integrated)**
+* 🧮 **Correlation Strategies (e.g., Pairs Trading)**
+* 🔐 **Advanced Risk Controls (e.g., Max Drawdown, Volatility Scaling)**
 
-## Conclusion
-This HFT simulation provides a realistic environment for testing algorithmic trading strategies using Kafka. By combining market microstructure analysis with real-time data processing, the system captures essential elements of professional trading systems while remaining accessible for research and development.
+---
+
+## 📌 Conclusion
+
+This Kafka-driven HFT simulator merges **real-time data pipelines**, **algorithmic strategies**, and **portfolio management** into a cohesive system for experimentation, analysis, and strategy validation.
+
+Let me know if you want:
+
+* A PDF/Markdown version
+* Auto-generated Swagger docs for API backend
+* Chart.js trade/PnL visualizations integrated with the live order book JSON
+* Or enhancements like LSTM forecasts or RL agents for decision making.

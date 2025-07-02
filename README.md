@@ -73,24 +73,6 @@ graph LR
 - **Stop Loss**: 0.3× ATR from entry
 - **Position Sizing**: 1% of equity per trade
 
-### 2. Hybrid Predictive Market-Making (HPMM)
-**Core Concept**: Uses machine learning to predict price direction and adjusts quotes asymmetrically
-
-#### Key Components:
-1. **Price Prediction**:
-   - XGBoost model forecasts 1-min returns
-   - Features: VWAP, volume imbalance, momentum, correlation
-   
-2. **Quote Management**:
-   - Wider bid spread when predicting downside
-   - Wider ask spread when predicting upside
-   - Inventory-based spread adjustment
-
-3. **Risk Controls**:
-   - Position decay mechanism
-   - Volatility kill switch (3% threshold)
-   - Maximum inventory limits
-
 ## System Components
 
 ### 1. Producer (`producer.py`)

@@ -1,4 +1,4 @@
-***WORK IN PROGRESS***
+***WORK IN PROGRESS*** 🛠️
 # High-Frequency Trading Simulation with Kafka
 
 ## Overview

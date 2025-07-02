@@ -211,38 +211,6 @@ RISK_PER_TRADE = 0.01  # 1% of equity
    - Trade records in `order_book.csv`
    - Portfolio state in `trading_state.json`
 
-## Performance Monitoring
-Key metrics tracked in order book:
-- **Notional Value**: Trade value (price × quantity)
-- **Cash Balance**: Available funds
-- **Portfolio Equity**: Cash + position values
-- **Position Status**: Entry prices and quantities
-
-Use the debug tool to inspect current state:
-```bash
-python debug.py
-
-# Sample output
-=== CURRENT STATE ===
-CASH: 87654.32
-POSITIONS:
-  AAPL: 50 @ 182.76 | Entry: 181.50
-  TSLA: -30 @ 265.43 | Entry: 267.20
-TOTAL EQUITY: 95678.45
-```
-
-## Strategy Calibration
-Adjust parameters in `config.py` for different market conditions:
-```python
-# For volatile markets
-VOLUME_MULTIPLIER = 2.5
-STOP_LOSS_MULTIPLIER = 0.4
-
-# For range-bound markets
-VOLUME_MULTIPLIER = 3.5
-TAKE_PROFIT_MULTIPLIER = 0.3
-```
-
 ## Future Enhancements
 1. **Machine Learning Integration**: Add predictive models for price forecasting
 2. **Multi-asset Correlation**: Implement pairs trading strategies
@@ -252,5 +220,3 @@ TAKE_PROFIT_MULTIPLIER = 0.3
 
 ## Conclusion
 This HFT simulation provides a realistic environment for testing algorithmic trading strategies using Kafka. By combining market microstructure analysis with real-time data processing, the system captures essential elements of professional trading systems while remaining accessible for research and development.
-
-For questions or contributions, please contact [Your Name] or open an issue in the repository.

@@ -289,13 +289,3 @@ python consumer.py
 - 🔐 Risk modules with drawdown control
 
 ---
-
-## 📌 Conclusion
-
-This Kafka-based simulation recreates key components of institutional HFT systems. Its modular design supports experimentation, performance tracking, and rapid strategy development.
-
-Let me know if you want:
-- A PDF/Markdown version
-- Auto-generated Swagger docs for API backend
-- Chart.js trade/PnL visualizations integrated with the live order book
-- Or enhancements like LSTM forecasts or RL agents for decision making.

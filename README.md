@@ -91,7 +91,7 @@ flowchart LR
     end
 
     %% --- Downstream Processing ---
-    Strategy["🧠 Strategy Engine (LSS)"]
+    Strategy["🧠 Strategy Engine"]
     Execution["⚙️ Execution System"]
     OrderBook["📝 Order Book"]
     Portfolio["💼 Portfolio State"]

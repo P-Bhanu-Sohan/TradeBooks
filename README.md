@@ -2,7 +2,7 @@
 
 ## 📘 Overview
 
-This simulation replicates a high-frequency trading (HFT) environment using **Apache Kafka** to stream **minute-wise tick data** for major tech stocks. It executes **institutional-style strategies** on historical data using a real-time architecture, producing realistic trade logs and portfolio **P&L** updates.
+This simulation replicates a high-frequency trading (HFT) environment using **Apache Kafka** to stream **minute-wise tick data** for major tech stocks. It executes **institutional-style strategies** on historical data using a real-time architecture, producing realistic trade logs and portfolio **P&L** updates. 
 
 ---
 
@@ -141,29 +141,17 @@ flowchart LR
 
 ---
 
-## 🧠 Trading Strategy: Liquidity Surge Scalping (LSS)
+## 📈 Strategy Name: Micro-Reversal Scalper with Trend Confirmation
 
-### 📌 Entry Criteria
-
-- 🔺 **Volume Surge**:  
-  `abs(% change) > 3 × rolling mean (20 min)`
-
-- 🔻 **Price Rejection Patterns**:
-  - Bullish: `(close - low) / (high - low) > 0.7`
-  - Bearish: `(high - close) / (high - low) > 0.7`
-
-- ✅ **Trend Confirmation**:
-  - Long: `EMA_5 > EMA_20`
-  - Short: `EMA_5 < EMA_20`
-
-### 🧮 Exit Conditions
-
-- 🎯 Take Profit: `+0.5 × ATR_14`  
-- 🛑 Stop Loss: `-0.3 × ATR_14`  
-- 🧷 Position Sizing: `1% of total equity`
-
+Summary:
+This strategy captures short-term price overreactions by detecting sudden price bursts (volume proxy), confirming them with rejection wicks, and aligning entries with the micro-trend using fast and slow EMAs. It uses ATR to dynamically set stop-loss and take-profit levels, ensuring trades adapt to current volatility. The goal is to scalp quick mean-reverting moves with tight, risk-controlled entries.
 ---
+Spot the Overreaction: Watch for a sudden burst of activity (a big price move) that often overshoots fair value.
+Confirm the Reversal: A long wick on the candle shows that buyers or sellers rejected that extreme, so price is primed to snap back.
+Ride the Micro‑Trend: Only take that quick reversal when it aligns with the tiny, underlying trend (short EMA vs. long EMA) so the move has momentum behind it.
+Adaptive Risk: Use ATR to size your stops and targets—wide when markets are volatile, tight when they’re calm—so you consistently capture small, high‑probability “pop and fade” moves.
 
+Users may replace this strategy with their own and use this pipeline as a backtester instead!
 ## 🧩 System Components
 
 ### `producer.py`

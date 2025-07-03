@@ -142,10 +142,10 @@ flowchart LR
 ---
 
 ## 📈 Strategy Name: Micro-Reversal Scalper with Trend Confirmation
-
+---
 Summary:
 This strategy captures short-term price overreactions by detecting sudden price bursts (volume proxy), confirming them with rejection wicks, and aligning entries with the micro-trend using fast and slow EMAs. It uses ATR to dynamically set stop-loss and take-profit levels, ensuring trades adapt to current volatility. The goal is to scalp quick mean-reverting moves with tight, risk-controlled entries.
----
+
 Spot the Overreaction: Watch for a sudden burst of activity (a big price move) that often overshoots fair value.
 Confirm the Reversal: A long wick on the candle shows that buyers or sellers rejected that extreme, so price is primed to snap back.
 Ride the Micro‑Trend: Only take that quick reversal when it aligns with the tiny, underlying trend (short EMA vs. long EMA) so the move has momentum behind it.

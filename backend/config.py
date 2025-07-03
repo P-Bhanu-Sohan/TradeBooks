@@ -2,27 +2,22 @@ import os
 import json
 import logging
 
-# Set up logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Absolute path to project root
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 logger.info(f"Project root: {PROJECT_ROOT}")
 
-# Ensure data directory exists
 DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 os.makedirs(DATA_DIR, exist_ok=True)
 logger.info(f"Data directory: {DATA_DIR}")
 
-# Guaranteed writable order book path
 ORDER_BOOK_PATH = os.path.join(DATA_DIR, 'order_book.csv')
 logger.info(f"Order book location: {ORDER_BOOK_PATH}")
 
-# Kafka settings
 KAFKA_CONFIG = {'bootstrap.servers': 'localhost:9092'}
 TOPICS = {
     'MSFT': 'topic_msft', 'AAPL': 'topic_aapl', 'AMZN': 'topic_amzn',
@@ -30,15 +25,13 @@ TOPICS = {
 }
 DATA_PATHS = {stock: os.path.join(DATA_DIR, f"{stock}.csv") for stock in TOPICS}
 
-# Portfolio accounting
-INITIAL_CAPITAL = 100_000.0
+INITIAL_CAPITAL = 1_000.0
 CASH = INITIAL_CAPITAL
 POSITIONS = {stock: 0 for stock in TOPICS}
 LAST_PRICE = {stock: 0.0 for stock in TOPICS}
 ENTRY_PRICES = {stock: 0.0 for stock in TOPICS}
 HOLDINGS_VALUE = 0.0
 
-# Strategy parameters
 VOLUME_WINDOW = 20
 VOLUME_MULTIPLIER = 3.0
 REJECTION_THRESHOLD = 0.7
@@ -49,7 +42,6 @@ STOP_LOSS_MULTIPLIER = 0.3
 TAKE_PROFIT_MULTIPLIER = 0.5
 RISK_PER_TRADE = 0.01
 
-# Initialize and manage state
 def init_state():
     global CASH, POSITIONS, LAST_PRICE, ENTRY_PRICES, HOLDINGS_VALUE
     state_file = os.path.join(DATA_DIR, 'trading_state.json')
@@ -102,7 +94,6 @@ def update_holdings_value():
 def get_equity():
     return CASH + HOLDINGS_VALUE
 
-# Verify path access
 def verify_path_access():
     try:
         test_path = os.path.join(DATA_DIR, 'access_test.tmp')
@@ -115,6 +106,5 @@ def verify_path_access():
         logger.error(f"PATH ACCESS DENIED: {str(e)}")
         return False
 
-# Initialize on import
 init_state()
 verify_path_access()

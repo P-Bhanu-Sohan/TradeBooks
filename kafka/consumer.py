@@ -42,7 +42,7 @@ logger.info(f"Initial equity: ${config.get_equity():,.2f}")
 
 try:
     while True:
-        msg = consumer.poll(0.1)  # Process messages quickly
+        msg = consumer.poll(600000)  # Process messages quickly
         if msg is None:
             continue
         if msg.error():
@@ -57,7 +57,7 @@ try:
             handle_tick(stock, tick)
         except Exception as e:
             logger.error(f"Error processing message: {str(e)}", exc_info=True)
-        time.sleep(0.01)  # Small delay to prevent CPU overload
+        time.sleep(0.1)  # Small delay to prevent CPU overload
 finally:
     consumer.close()
     logger.info("Consumer closed. Final portfolio state:")

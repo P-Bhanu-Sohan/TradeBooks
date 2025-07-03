@@ -6,7 +6,6 @@ import os
 import sys
 from confluent_kafka import Producer
 
-# Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.config import KAFKA_CONFIG, TOPICS, DATA_PATHS  # Fixed import
 
@@ -38,7 +37,6 @@ def stream_data():
                     '% change': row.get('% change', '0')
                 }
                 
-                # Send to Kafka
                 producer.produce(
                     TOPICS[stock],
                     json.dumps(tick).encode('utf-8'),
@@ -46,7 +44,7 @@ def stream_data():
                 )
             
             producer.flush()
-            time.sleep(2)  # Sleep for 1 minute (minute data)
+            time.sleep(60) 
     
     finally:
         for f in files.values():

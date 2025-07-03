@@ -10,7 +10,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def execute_order(stock, action, qty, price):
-    """Execute trade with robust recording"""
+    """Execute trade with robust recording""" 
     # Input validation
     if qty <= 0:
         logger.error(f"Invalid quantity: {qty} for {stock}")

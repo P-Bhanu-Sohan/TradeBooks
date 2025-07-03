@@ -1,7 +1,7 @@
 // script.js
 const API_BASE_URL = 'http://localhost:8000';
 const PROFIT_BOOK_ENDPOINT = '/api/profit-book';
-const INITIAL_CAPITAL = 100000.00;
+const INITIAL_CAPITAL = 1000.00;
 let pnlChart, volumeChart;
 let isRefreshing = false;
 

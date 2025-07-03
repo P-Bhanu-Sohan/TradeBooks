@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import logging
-from collections import deque
+from collections import deque 
 from datetime import datetime
 from .execution import execute_order
 from . import config  # Import the entire config module
@@ -9,7 +9,7 @@ from . import config  # Import the entire config module
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s' 
 )
 logger = logging.getLogger(__name__)
 

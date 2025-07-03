@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shikshak Securities - Trading Dashboard</title>
+    <title>HFT Simulator - Trading Dashboard to Backtest Quantitative Strategies</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.4/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
@@ -478,27 +478,9 @@
 
         <aside class="sidebar">
             <div class="logo-section">
-                <div class="logo">SS</div>
-                <div class="company-name">Shikshak Securities</div>
+                <div class="logo">T</div>
+                <div class="company-name">HFT Simulation</div>
             </div>
-            <a href="#" class="nav-item active">
-                <i class="fas fa-chart-line"></i> Dashboard
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-wallet"></i> Portfolio
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-exchange-alt"></i> Transactions
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-cog"></i> Settings
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-file-alt"></i> Reports
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
         </aside>
 
         <main class="main-content">
@@ -512,7 +494,7 @@
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Portfolio Value</div>
-                    <div class="metric-value" id="portfolio-value">$100,000.00</div>
+                    <div class="metric-value" id="portfolio-value">$1,000.00</div>
                     <div class="metric-change" id="value-change">
                         <i class="fas fa-arrow-up"></i> Loading...
                     </div>
@@ -598,8 +580,8 @@
             </div>
 
             <div class="footer">
-                <p>Shikshak Securities • High Frequency Trading Platform • Data updates every 10 seconds</p>
-                <p>© 2023 Shikshak Securities. All rights reserved.</p>
+                <p>• High Frequency Trading Platform • Data updates frequently</p>
+                <p>© 2025 Bhanu Sohan Pingali. SIMULATION ONLY.</p>
             </div>
         </main>
     </div>
@@ -607,7 +589,7 @@
     <script>
         const API_BASE_URL = 'http://localhost:8000';
         const PROFIT_BOOK_ENDPOINT = '/api/profit-book';
-        const INITIAL_CAPITAL = 100000.00;
+        const INITIAL_CAPITAL = 1000.00;
         
         let pnlChart, volumeChart;
         let tradesData = [];

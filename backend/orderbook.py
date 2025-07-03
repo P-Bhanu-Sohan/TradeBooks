@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def record_trade(symbol, action, qty, price):
-    """Reliable trade recording with multiple fallbacks"""
+    """Reliable trade recording with multiple fallbacks""" 
     try:
         # Ensure directory exists
         os.makedirs(os.path.dirname(config.ORDER_BOOK_PATH), exist_ok=True)

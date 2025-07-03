@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shikshak Securities - API Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a192f;
+            color: #e6f1ff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(17, 34, 64, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+        h1 {
+            color: #64ffda;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #64ffda, #00c6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .endpoint {
+            background: rgba(10, 25, 47, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            border-left: 3px solid #64ffda;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #2a3a5a, #3a4a6a);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: linear-gradient(135deg, #3a4a6a, #4a5a7a);
+            transform: translateY(-2px);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(10, 25, 47, 0.9);
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            color: #00e676;
+            border-left: 3px solid #00e676;
+        }
+        .error {
+            color: #ff5252;
+            border-left: 3px solid #ff5252;
+        }
+        .loading {
+            color: #64ffda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shikshak Securities API Connectivity Test</h1>
+        
+        <div class="endpoint">
+            <strong>API Endpoint:</strong> 
+            <span id="api-endpoint">http://localhost:8000/api/profit-book</span>
+        </div>
+        
+        <button class="btn" id="testBtn">
+            Test API Connection
+        </button>
+        
+        <div class="result" id="result">
+            Click the button to test API connectivity
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const endpoint = document.getElementById('api-endpoint').textContent;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<div class="loading">Testing API connection...</div>';
+            resultDiv.className = 'result loading';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(endpoint);
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>✓ Connection Successful!</strong>
+                        <p>Response time: ${duration}ms</p>
+                        <p>Received ${data.length} trade records</p>
+                        <button class="btn" id="viewBtn">View Sample Data</button>
+                    </div>
+                    <div id="dataPreview" style="display:none; margin-top:20px;">
+                        <pre>${JSON.stringify(data.slice(0, 3), null, 2)}</pre>
+                    </div>
+                `;
+                
+                resultDiv.className = 'result success';
+                
+                document.getElementById('viewBtn').addEventListener('click', () => {
+                    const preview = document.getElementById('dataPreview');
+                    preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+                });
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>✗ Connection Failed</strong>
+                        <p>Error: ${error.message}</p>
+                        <p>Possible issues:</p>
+                        <ul>
+                            <li>API server not running</li>
+                            <li>Incorrect endpoint URL</li>
+                            <li>CORS configuration issue</li>
+                            <li>Network connectivity problem</li>
+                        </ul>
+                        <p>Check browser console (F12) for more details.</p>
+                    </div>
+                `;
+                resultDiv.className = 'result error';
+                console.error('API Test Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

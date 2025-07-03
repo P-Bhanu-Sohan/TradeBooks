@@ -269,11 +269,6 @@ python consumer.py
 ---
 
 ## 🛠️ Future Enhancements
-
-- 🤖 Machine learning-based alpha models  
-- 📉 Backtesting & statistical edge evaluation  
-- 📊 Chart.js dashboards with real-time analytics  
-- 🧮 Correlation & pairs-trading support  
-- 🔐 Risk modules with drawdown control
-
----
+- Generating second wise tick data via APIs
+- Improving the Quantitative Strategies implemented
+- UI Improvements!

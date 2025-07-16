@@ -2,7 +2,7 @@
 
 ## 📘 Overview
 
-This simulation replicates a high-frequency trading (HFT) environment using **Apache Kafka** to stream **minute-wise tick data** for major tech stocks. It executes **institutional-style strategies** on historical data using a real-time architecture, producing realistic trade logs and portfolio **P&L** updates. 
+This simulation replicates a high-frequency trading (HFT) environment using **Apache Kafka** to stream **minute-wise tick data** for major tech stocks. It executes **institutional-style strategies** on historical data using a real-time architecture, producing realistic trade logs and portfolio **P&L** updates. This code is only a simulation and does not reflect live time stock data or money.
 
 ---
 
@@ -272,3 +272,6 @@ python consumer.py
 - Generating second wise tick data via APIs
 - Improving the Quantitative Strategies implemented
 - UI Improvements!
+
+
+

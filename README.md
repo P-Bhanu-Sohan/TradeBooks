@@ -2,6 +2,8 @@
 
 ## 📘 Overview
 
+Current updates are being made to interpolate intra second data from minute wise ticks
+
 This simulation replicates a high-frequency trading (HFT) environment using **Apache Kafka** to stream **minute-wise tick data** for major tech stocks. It executes **institutional-style strategies** on historical data using a real-time architecture, producing realistic trade logs and portfolio **P&L** updates. This code is only a simulation and does not reflect live time stock data or money.
 
 ---

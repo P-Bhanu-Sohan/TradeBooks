@@ -14,8 +14,7 @@ TradeBooks is a comprehensive, simulated algorithmic trading platform designed t
 ## 1. System Architecture
 
 The TradeBooks system is meticulously structured into several interconnected, yet independently operable, components. This modularity is key to its design, allowing for clear separation of concerns and potential future scaling.
-mermaid
-```
+
 graph TD
     %% --- Producer + Kafka Node ---
     KafkaStream["🛠️ Producer + Kafka Broker"]
@@ -77,7 +76,6 @@ graph TD
     classDef nvda fill:#d3f9d8,stroke:#76b900,color:#000;
     classDef tsla fill:#ffadad,stroke:#cc0000,color:#000;
     classDef goog fill:#e0c3fc,stroke:#4285f4,color:#000;
-```
 
 
 *   **Backend (Python):** This is the brain of TradeBooks, encompassing the core business logic. It's responsible for:
@@ -200,39 +198,11 @@ Positions are exited based on dynamic take-profit and stop-loss levels, adapting
 
 The design and implementation of TradeBooks involve several deliberate trade-offs, prioritizing simplicity, clarity, and educational value over the complexities required for a production-grade, high-frequency trading system.
 
-*   **Simplicity vs. Realism (Execution & Data):**
-    *   **Choice:** The system employs file-based data storage (CSV, JSON) and a highly simplified trade execution engine (`execution.py`).
-    *   **Why:** This approach significantly reduces setup complexity and external dependencies (no database installation, no complex exchange API integrations). It allows developers to focus on the core logic of strategy and order management.
-    *   **Trade-off:** This design lacks the realism of actual market conditions. There's no simulation of slippage (the difference between expected and actual execution price), partial fills, order queueing, or the impact of large orders on market depth. The file-based storage is not suitable for high-throughput, concurrent access, or complex querying, which are critical for real-time trading and large-scale data analysis. For example, `order_book.csv` is a simple log, not a dynamic, queryable order book.
-
 *   **Scalability (Kafka vs. Direct Calls):**
     *   **Choice:** Apache Kafka is integrated for inter-component communication (`kafka/producer.py`, `kafka/consumer.py`).
     *   **Why:** Kafka provides a robust, scalable, and fault-tolerant messaging backbone. It decouples components, allowing them to operate and scale independently. This design choice prepares the system for future expansion, where different modules might run on separate servers or in microservices architectures.
     *   **Trade-off:** For a small, single-process simulation, Kafka introduces additional overhead and complexity (setting up a Kafka broker, message serialization/deserialization). Direct function calls between modules would be simpler and faster for a purely in-memory, single-process application. However, the decision to use Kafka is forward-looking, demonstrating best practices for distributed systems.
 
-*   **Performance (Python GIL):**
-    *   **Choice:** Python is used for the entire backend.
-    *   **Why:** Python offers rapid development, a vast ecosystem of libraries (e.g., NumPy for numerical operations in `strategy.py`), and excellent readability. It's ideal for prototyping and educational purposes.
-    *   **Trade-off:** Python's Global Interpreter Lock (GIL) limits true parallelism for CPU-bound tasks within a single process. While asynchronous programming (which Kafka facilitates) can mitigate some I/O bottlenecks, for ultra-low-latency, high-frequency trading where every nanosecond counts, compiled languages like C++ or Java are typically preferred. For this simulation, Python's development speed and ease of use outweigh the raw performance limitations.
-
-*   **Frontend (Basic HTML/JS):**
-    *   **Choice:** A simple HTML/JavaScript frontend (`frontend/index.html`, `frontend/script.js`) is provided.
-    *   **Why:** This offers a basic visual interface and a means to test API connectivity without requiring complex frontend frameworks or build processes. It keeps the focus on the backend trading logic.
-    *   **Trade-off:** The frontend is not a full-featured trading terminal. It lacks advanced charting capabilities, real-time data streaming (unless WebSockets are added), and sophisticated user interaction features found in professional trading platforms. It serves primarily as a demonstration of potential interaction.
-
-*   **Error Handling & Resilience:**
-    *   **Choice:** Basic logging is implemented (`logging` module in `strategy.py`), but comprehensive error handling, retry mechanisms, and fault tolerance are simplified.
-    *   **Why:** For a simulation, the primary goal is to demonstrate functionality. Adding robust error handling for every edge case would significantly increase code complexity without directly contributing to the core learning objectives.
-    *   **Trade-off:** A production trading system would require extensive error handling, robust logging, circuit breakers, and sophisticated retry logic to ensure continuous operation and data integrity in the face of network issues, data anomalies, or system failures.
-
-*   **Security:**
-    *   **Choice:** Security considerations (authentication, authorization, data encryption) are minimal or absent.
-    *   **Why:** As a local simulation, security is not a primary concern.
-    *   **Trade-off:** Any real-world trading system handling sensitive financial data would require stringent security measures to protect against unauthorized access, data breaches, and manipulation.
-
-## 8. Conclusion
-
-TradeBooks provides a clear, modular, and educational framework for understanding the fundamental components of an algorithmic trading system. It effectively demonstrates how different modules can interact, manage data, and communicate asynchronously using a messaging queue. The deliberate trade-offs made in its design highlight the balance between complexity, realism, and the specific goals of a simulated environment.
 
 ## 9. Usefulness as a Foundation
 
@@ -242,5 +212,3 @@ This project serves as an excellent foundation for:
 *   **Kafka Integration Practice:** Demonstrates the practical application of Apache Kafka for inter-service communication, message queuing, and building decoupled systems.
 *   **System Design Exploration:** Allows for experimentation with different architectural patterns for distributed systems and understanding the benefits of modular design.
 *   **Developing Advanced Strategies:** New trading strategies can be easily integrated and tested within the existing framework, leveraging the established data flow and execution engine.
-*   **Building a Full-Fledged Trading Bot:** Can be extended by integrating with real-time market data APIs (e.g., Alpaca, Interactive Brokers), brokerage APIs for live trading, and more sophisticated database solutions (e.g., PostgreSQL, MongoDB) for enhanced data management and querying.
-*   **Educational Tool:** Ideal for students or developers looking to grasp the core concepts behind financial technology (FinTech) applications and the mechanics of automated trading.

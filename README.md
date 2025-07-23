@@ -15,19 +15,68 @@ TradeBooks is a comprehensive, simulated algorithmic trading platform designed t
 
 The TradeBooks system is meticulously structured into several interconnected, yet independently operable, components. This modularity is key to its design, allowing for clear separation of concerns and potential future scaling.
 
-```mermaid
-graph TD
-    A[Market Data CSV Files] --> B(Backend: Strategy Module)
-    B --> C(Backend: Order Book Module)
-    C --> D(Kafka Producer)
-    D --> E(Kafka Broker)
-    E --> F(Kafka Consumer)
-    F --> G(Backend: Execution Module)
-    G --> H[Trading State JSON]
-    G --> I[Order Book CSV]
-    J[Frontend] --> K(Backend API)
-    K --> C
+%% --- Producer + Kafka Node ---
+    KafkaStream["🛠️ Producer + Kafka Broker"]
+
+    %% --- Kafka Topics ---
+    subgraph KafkaTopics["📦 Kafka Topics"]
+        TAAPL["topic_aapl"]
+        TMSFT["topic_msft"]
+        TAMZN["topic_amzn"]
+        TNVDA["topic_nvda"]
+        TTSLA["topic_tsla"]
+        TGOOG["topic_goog"]
+    end
+
+    %% --- Downstream Processing ---
+    Strategy["🧠 Strategy Engine"]
+    Execution["⚙️ Execution System"]
+    OrderBook["📝 Order Book"]
+    Portfolio["💼 Portfolio State"]
+
+    %% --- Connections ---
+    AAPL --> KafkaStream
+    MSFT --> KafkaStream
+    AMZN --> KafkaStream
+    NVDA --> KafkaStream
+    TSLA --> KafkaStream
+    GOOG --> KafkaStream
+
+    KafkaStream --> TAAPL
+    KafkaStream --> TMSFT
+    KafkaStream --> TAMZN
+    KafkaStream --> TNVDA
+    KafkaStream --> TTSLA
+    KafkaStream --> TGOOG
+
+    TAAPL --> Strategy
+    TMSFT --> Strategy
+    TAMZN --> Strategy
+    TNVDA --> Strategy
+    TTSLA --> Strategy
+    TGOOG --> Strategy
+
+    Strategy --> Execution
+    Execution --> OrderBook
+    Execution --> Portfolio
+
+    %% --- Classes ---
+    class AAPL,TAAPL apple;
+    class MSFT,TMSFT msft;
+    class AMZN,TAMZN amzn;
+    class NVDA,TNVDA nvda;
+    class TSLA,TTSLA tsla;
+    class GOOG,TGOOG goog;
+
+    %% --- Class Definitions ---
+    classDef apple fill:#a2d2ff,stroke:#023e8a,color:#000;
+    classDef msft fill:#d0f4de,stroke:#0078d4,color:#000;
+    classDef amzn fill:#ffe066,stroke:#ff9900,color:#000;
+    classDef nvda fill:#d3f9d8,stroke:#76b900,color:#000;
+    classDef tsla fill:#ffadad,stroke:#cc0000,color:#000;
+    classDef goog fill:#e0c3fc,stroke:#4285f4,color:#000;
 ```
+
 
 *   **Backend (Python):** This is the brain of TradeBooks, encompassing the core business logic. It's responsible for:
     *   **Strategy Application:** Analyzing market data and generating trading signals.

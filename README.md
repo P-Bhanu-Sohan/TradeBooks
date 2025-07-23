@@ -14,7 +14,9 @@ TradeBooks is a comprehensive, simulated algorithmic trading platform designed t
 ## 1. System Architecture
 
 The TradeBooks system is meticulously structured into several interconnected, yet independently operable, components. This modularity is key to its design, allowing for clear separation of concerns and potential future scaling.
+mermaid
 
+```
 %% --- Producer + Kafka Node ---
     KafkaStream["🛠️ Producer + Kafka Broker"]
 

@@ -6,9 +6,9 @@ TradeBooks is a comprehensive, simulated algorithmic trading platform designed t
 
 ## Tech Stack:
 
-*   **Backend:** Python 3.x (for core logic, strategy, execution, and Kafka integration)
+*   **Backend:** Python 3 (for core logic, strategy, execution, and Kafka integration)
 *   **Frontend:** HTML5, CSS3, JavaScript (for a basic web interface and API testing)
-*   **Messaging Queue:** Apache Kafka (for asynchronous, high-throughput communication)
+*   **Messaging Queue:** Kafka for Data Streaming
 *   **Data Storage:** CSV files (for historical market data and order book snapshots), JSON files (for dynamic trading state)
 
 ## 1. System Architecture

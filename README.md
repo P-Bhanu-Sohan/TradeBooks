@@ -17,15 +17,15 @@ The TradeBooks system is meticulously structured into several interconnected, ye
 
 ```mermaid
 graph TD
-    A[Market Data (CSV Files)] --> B(Backend: Strategy Module)
+    A[Market Data CSV Files] --> B(Backend: Strategy Module)
     B --> C(Backend: Order Book Module)
     C --> D(Kafka Producer)
     D --> E(Kafka Broker)
     E --> F(Kafka Consumer)
     F --> G(Backend: Execution Module)
-    G --> H[Trading State (JSON)]
-    G --> I[Order Book (CSV)]
-    J[Frontend (HTML/JS)] --> K(Backend API - if implemented)
+    G --> H[Trading State JSON]
+    G --> I[Order Book CSV]
+    J[Frontend] --> K(Backend API)
     K --> C
 ```
 

@@ -216,3 +216,6 @@ This project serves as an excellent foundation for:
 *   **System Design Exploration:** Allows for experimentation with different architectural patterns for distributed systems and understanding the benefits of modular design.
 *   **Developing Advanced Strategies:** New trading strategies can be easily integrated and tested within the existing framework, leveraging the established data flow and execution engine.
 
+## CITATION for dataset Source:
+https://www.kaggle.com/yug201/datasets
+

@@ -1,5 +1,8 @@
 # TradeBooks: Simulating a Trading System
 
+DISCLAIMER
+* ALL DATASETS HAVE BEEN TAKEN FROM KAGGLE IN THIS PROJECT. NO FINANCIAL DECISIONS SHOULD BE TAKEN BASED ON THIS SIMULATION. THIS PROJECT DOES NOT EXECUTE REAL TRADES IN ANY WAY AND IS A SIMULATION. THIS IS NOT FINANCIAL ADVICE.
+
 ## Overview
 
 TradeBooks is a comprehensive, simulated algorithmic trading platform designed to demonstrate the fundamental components and interactions within a modern trading system. It provides a hands-on environment to explore concepts such as market data processing, order book management, trade execution, and the implementation of rule-based trading strategies. The system leverages Apache Kafka for robust inter-component communication, ensuring a decoupled and scalable architecture, and utilizes simple file-based storage for persistence. While designed for simulation, its modular structure serves as an excellent foundation for understanding the complexities of real-world trading systems.
@@ -212,3 +215,4 @@ This project serves as an excellent foundation for:
 *   **Kafka Integration Practice:** Demonstrates the practical application of Apache Kafka for inter-service communication, message queuing, and building decoupled systems.
 *   **System Design Exploration:** Allows for experimentation with different architectural patterns for distributed systems and understanding the benefits of modular design.
 *   **Developing Advanced Strategies:** New trading strategies can be easily integrated and tested within the existing framework, leveraging the established data flow and execution engine.
+
